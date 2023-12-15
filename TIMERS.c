@@ -15,7 +15,7 @@
 
 //CONTENU FONCTIONS EXTERNES
 
-// 
+
 // void TIMER1_Init_1ms(void)
 // {
 // 	#if defined (_1MHZ)

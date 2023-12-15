@@ -6,9 +6,9 @@
 #include "lcd.h"
 #include "DS3232.h"
 #include "I2C_Master.h"
-#include "PWM.h"
 #include <avr/interrupt.h>
 #include <avr/io.h>
+#include <avr/delay.h>
 
 //Variables globales
 //char Lcd_TXT[6] [6] = {" ","GREEN","DOWN","RED","ENTER","BLUE"} ;
@@ -136,7 +136,7 @@ void OS_Start(void)
 	nextstate = ST_TXT_WELCOME;
 	statetext = Txt_WELCOME;
 	pStateFunc = NULL;
-	
+	_delay_ms(300);
  	sei();  
 
 	// RTC_Alarm_Set_Seconde(10);
@@ -259,6 +259,7 @@ ISR(TIMER1_OVF_vect) {
 // 	TIMER1_OVF Timer/Counter1 Overflow
 // For debug :
 //	Usart0_Tx_String("what");Usart0_Tx(0X0D);
+
 	incrementSin();
 }
 // ***************************************

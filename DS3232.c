@@ -185,6 +185,7 @@ unsigned char RTC_Clock_Read_Byte(unsigned char Adr_Pointer)
 unsigned char convertBCDtoChar(unsigned char AddressOfData, unsigned char Register_Data)
 {
 	unsigned char dizaine = 0;
+	Usart0_Tx_String(dizaine);
 	unsigned char unite = 0;
 	unsigned char valeur = 0;
 	// Selon le type de donnée,
