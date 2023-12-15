@@ -4,6 +4,7 @@
 #include <avr/interrupt.h>
 #include <string.h>	// Manipulation de chaînes de caractères
 #include <stdlib.h> // pour utiliser la fonction itoa()
+#include <avr/delay.h>
 
 #include "Main.h"
 #include "OS.h"
@@ -22,7 +23,8 @@ unsigned char IDCB_Led = 0;			// Identificateur callback timer pour le clignotem
 //****************** fonction principale *****************
 int main (void)
 {
- 	//Initialisation hardware 
+ 	_delay_ms(300);
+	 //Initialisation hardware 
 	Init_Hardware();
 	//Initilisation LCD
 	lcd_init(LCD_DISP_ON); lcd_clrscr(); 
@@ -31,16 +33,14 @@ int main (void)
 	//Initialisation ADC
 	ADC_init();
 	
-	// Initialisation PWM	
-	// PWM_1_A_B_init(0x5,255);	// prescaler = 0b001 ; TOP = 4095; 16 bits
-	// PWM_2_B_init(0x7,255); // TOP = 255; 8 bits
 	
 	// Initialisation des Callbacks
 	OS_Init();
  	IDCB_Led = Callbacks_Record_Timer(Switch_LED, 500);
 	
 	Callbacks_Record_Usart0_RX(USART0_RX);
-
+	
+	
  	// Lancement OS (Boucle infinie)
 	OS_Start();
 	//N'arrive jamais ici
@@ -253,12 +253,9 @@ void USART0_RX(volatile char *Trame_USART0)
 		static unsigned char First_in_Function = TRUE;
 		
 		if (First_in_Function){
-			cli();lcd_gotoxy(0,1);lcd_puts("1 PWM selectionne");sei();
+			cli();lcd_gotoxy(0,1);lcd_puts("1 PWM set");sei();
 			First_in_Function = FALSE;
 			PWM_init(1);
-			setDutyCycle_1A(127);
-			setDutyCycle_1B(0);
-			setDutyCycle_2B(0);
 		}
 		else{
 			if (input == ENTER){
@@ -274,12 +271,9 @@ void USART0_RX(volatile char *Trame_USART0)
 		static unsigned char First_in_Function = TRUE;
 		
 		if (First_in_Function){
-			cli();lcd_gotoxy(0,1);lcd_puts("2 PWM selectionnes");sei();
+			cli();lcd_gotoxy(0,1);lcd_puts("2 PWM set");sei();
 			First_in_Function = FALSE;
 			PWM_init(2);
-			setDutyCycle_1A(127);
-			setDutyCycle_1B(127);
-			setDutyCycle_2B(0);
 		}
 		else{
 			if (input == ENTER){
@@ -295,12 +289,9 @@ void USART0_RX(volatile char *Trame_USART0)
 		static unsigned char First_in_Function = TRUE;
 		
 		if (First_in_Function){
-			cli();lcd_gotoxy(0,1);lcd_puts("3 PWM selectionnes");sei();
+			cli();lcd_gotoxy(0,1);lcd_puts("3 PWM set");sei();
 			First_in_Function = FALSE;
 			PWM_init(3);
-			setDutyCycle_1A(127);
-			setDutyCycle_1B(127);
-			setDutyCycle_2B(127);
 		}
 		else{
 			if (input == ENTER){
@@ -313,39 +304,48 @@ void USART0_RX(volatile char *Trame_USART0)
 	
 	char Periode(char input)
 	{
-		static int PeriodePWM = 50;
+		static int PeriodePWM = 125;
 		char String[4];
 		static unsigned char First_in_Function = TRUE;
 		
 		if (First_in_Function){
-				cli();lcd_gotoxy(0,1);lcd_puts("Frequence :50");sei();
+				itoa(PeriodePWM*12.8, String, 10);
+				cli();lcd_gotoxy(0,1);lcd_puts("Periode:    ms");lcd_gotoxy(8,1);lcd_puts(String);sei();
 				First_in_Function = FALSE;
 		}
 		else{
 			if (input != ENTER){
 				switch(input){
+					case LEFT :
+						PeriodePWM -= 10;
+						if (PeriodePWM<0){PeriodePWM=0;}
+						itoa(PeriodePWM*12.8, String, 10);
+						cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei();
+						break;
 					case DOWN :
-					PeriodePWM -= 10;
-					if (PeriodePWM<0){PeriodePWM=0;}
-					itoa(PeriodePWM, String, 10);
-					cli();lcd_gotoxy(11,1);lcd_puts("  ");lcd_gotoxy(11,1);lcd_puts(String);sei();
-					break;
+					PeriodePWM --;
+						if (PeriodePWM<0){PeriodePWM=0;}
+						itoa(PeriodePWM*12.8, String, 10);
+						cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei();
+						break;
 					case UP:
-					PeriodePWM +=10;
-					if (PeriodePWM>256){PeriodePWM=255;}
-					itoa(PeriodePWM, String, 10);
-					cli();lcd_gotoxy(11,1);lcd_puts("  ");lcd_gotoxy(11,1);lcd_puts(String);sei();
-					break;
+						PeriodePWM ++;
+						if (PeriodePWM>255){PeriodePWM=255;}
+						itoa(PeriodePWM*12.8, String, 10);
+						cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei();
+						break;
+					case RIGHT:
+						PeriodePWM +=10;
+						if (PeriodePWM>255){PeriodePWM=255;}
+						itoa(PeriodePWM*12.8, String, 10);
+						cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei();
+						break;
 				}
 				
 			}
 			else
 			{
-				PWM_1_A_B_init(0B001,PeriodePWM);	// prescaler = 0b001 ; TOP = 4095; 16 bits
-				PWM_2_B_init(0b001,PeriodePWM);
-				setDutyCycle_1A(PeriodePWM/2);
-				setDutyCycle_1B(PeriodePWM/2);
-				setDutyCycle_2B(PeriodePWM/2);
+				SetPWMPeriode(PeriodePWM);
 				First_in_Function = TRUE;
 				return ST_TXT_STORAGE;
 			}	
@@ -360,13 +360,14 @@ void USART0_RX(volatile char *Trame_USART0)
 		static unsigned char First_in_Function = TRUE;
 		if (First_in_Function){
 			First_in_Function = FALSE;
+			cli();lcd_gotoxy(0,1);lcd_puts("PAS à FAIRE");sei();
 		}
 		else{
 			if (input != ENTER){
 			}
 			else{
 				First_in_Function = TRUE;
-			return ST_TXT_PWM_SETUP;
+				return ST_TXT_PWM_SETUP;
 			}
 		}
 		return ST_FCT_RESOLUTION;
@@ -378,13 +379,15 @@ void USART0_RX(volatile char *Trame_USART0)
 		static unsigned char First_in_Function = TRUE;
 		if (First_in_Function){
 			First_in_Function = FALSE;
+			cli();lcd_gotoxy(0,1);lcd_puts("Dent de scie SET");sei();
 		}
 		else{
 			if (input != ENTER){
 			}
 			else{
+				DentDeScie_ON(TRUE);
 				First_in_Function = TRUE;
-				return ST_TXT_PWM_SETUP;
+				return ST_TXT_PWM_TRIANGLE;
 			}
 		}
 		return ST_FCT_DENT_SCIE;
@@ -397,13 +400,15 @@ void USART0_RX(volatile char *Trame_USART0)
 		static unsigned char First_in_Function = TRUE;
 		if (First_in_Function){
 			First_in_Function = FALSE;
+			cli();lcd_gotoxy(0,1);lcd_puts("Isocele SET");sei();
 		}
 		else{
 			if (input != ENTER){
 			}
 			else{
+				DentDeScie_ON(FALSE);
 				First_in_Function = TRUE;
-				return ST_TXT_PWM_SETUP;
+				return ST_TXT_PWM_TRIANGLE;
 			}
 		}
 		return ST_FCT_ISOCELE;
@@ -557,8 +562,55 @@ void USART0_RX(volatile char *Trame_USART0)
 	char Pwm_Manual(char input)
 	{
 		// Arnaud + Julien + Emre + Charles
-		//return ST_FCT_MANUAL_MODE_PWM;
-		return ST_TXT_PWM;
+		//return ST_FCT_MODE_SINUS;
+		static unsigned char First_in_Function = TRUE;
+		static int DutyCycle = 50;
+		char String[4];
+		if (First_in_Function){
+			First_in_Function = FALSE;
+			itoa(DutyCycle, String, 10);
+			cli();lcd_gotoxy(0,1);lcd_puts("Duty cycle: ");sei();
+			cli();lcd_gotoxy(11,1);lcd_puts(String);sei();
+			PWM_ManualMode_Initialisation();
+			PWM_ManualMode_DutyCycle(DutyCycle);
+		}
+		else{
+			if (input != ENTER){
+				switch(input){
+ 					case DOWN:
+	 					DutyCycle = EDIT_VALUE(DutyCycle, DOWN, 0, 100);
+						PWM_ManualMode_DutyCycle(DutyCycle);
+	 					itoa(DutyCycle, String, 10);
+	 					cli();lcd_gotoxy(11,1);lcd_puts("   ");lcd_gotoxy(11,1);lcd_puts(String);sei();
+ 						break;
+					case LEFT :
+						 DutyCycle -= 10;
+						 if (DutyCycle<0){DutyCycle=0;}
+						 PWM_ManualMode_DutyCycle(DutyCycle);
+						 itoa(DutyCycle, String, 10);
+						 cli();lcd_gotoxy(11,1);lcd_puts("    ");lcd_gotoxy(11,1);lcd_puts(String);sei();
+						 break;
+ 					case UP:
+	 					DutyCycle = EDIT_VALUE(DutyCycle, UP, 0, 100);
+						PWM_ManualMode_DutyCycle(DutyCycle);
+	 					itoa(DutyCycle, String, 10);
+	 					cli();lcd_gotoxy(11,1);lcd_puts("   ");lcd_gotoxy(11,1);lcd_puts(String);sei();
+ 						break;
+					case RIGHT:
+						DutyCycle +=10;
+						if (DutyCycle>100){DutyCycle=100;}
+						PWM_ManualMode_DutyCycle(DutyCycle);
+						itoa(DutyCycle, String, 10);
+						cli();lcd_gotoxy(11,1);lcd_puts("    ");lcd_gotoxy(11,1);lcd_puts(String);sei();
+						break;
+				}
+ 			}
+			else{
+				First_in_Function = TRUE;
+				return ST_TXT_PWM;
+			}
+		}
+		return ST_FCT_MANUAL_MODE_PWM;
 	}
 
 
@@ -584,19 +636,34 @@ void USART0_RX(volatile char *Trame_USART0)
 	char Sinus_Amplitude(char input)
 	{
 		static unsigned char First_in_Function = TRUE;
+		static unsigned int AmplitudeSinus = 5;
+		char String[4];
+		
 		if (First_in_Function){
 			First_in_Function = FALSE;
+			itoa(AmplitudeSinus, String, 10);
+			cli();lcd_gotoxy(0,1);lcd_puts("Amplitude:  V");lcd_gotoxy(11,1);lcd_puts(String);sei();
 		}
 		else{
 			if (input != ENTER){
+				switch(input){
+					case UP:
+					case DOWN:
+						AmplitudeSinus = EDIT_VALUE(AmplitudeSinus,input,1,5);
+						itoa(AmplitudeSinus, String, 10);
+						cli();lcd_gotoxy(11,1);lcd_puts(String);sei();
+						break;
+				}
 			}
 			else{
 				First_in_Function = TRUE;
-				return ST_TXT_ON_OFF_SINUS;
+				void SetPWMAmplitude(AmplitudeSinus);
+				return ST_TXT_SINUS;
 			}
 		}
 		return ST_FCT_SINUS_AMPLITUDE;	
 	}
+	
 	char Sinus_Periode(char input)
 	{
 		// Arnaud + Julien + Emre + Charles
@@ -610,7 +677,7 @@ void USART0_RX(volatile char *Trame_USART0)
 			}
 			else{
 				First_in_Function = TRUE;
-				return ST_TXT_ON_OFF_SINUS;
+				return ST_TXT_SINUS;
 			}
 		}
 		return ST_FCT_SINUS_PERIODE;
@@ -620,15 +687,36 @@ void USART0_RX(volatile char *Trame_USART0)
 	{
 		// Arnaud + Julien + Emre + Charles
 		//return ST_FCT_ON_OFF_SINUS;
+		// Arnaud + Julien + Emre + Charles
+		//return ST_FCT_SINUS_PERIODE;static unsigned char First_in_Function = TRUE;
 		static unsigned char First_in_Function = TRUE;
+		static unsigned char ON;
+		
 		if (First_in_Function){
 			First_in_Function = FALSE;
+			cli();lcd_gotoxy(0,1);lcd_puts("    ");lcd_gotoxy(0,1);lcd_puts("ON");sei();
+			ON = TRUE;
 		}
 		else{
 			if (input != ENTER){
+				switch(input){
+					case LEFT:
+						if(ON == FALSE){
+							cli();lcd_gotoxy(0,1);lcd_puts("    ");lcd_gotoxy(0,1);lcd_puts("ON");sei();
+							ON = TRUE;
+						}
+						break;
+					case RIGHT:
+						if(ON == TRUE){
+							cli();lcd_gotoxy(0,1);lcd_puts("    ");lcd_gotoxy(0,1);lcd_puts("OFF");sei();
+							ON = FALSE;
+						}
+						break;
+				}
 			}
 			else{
 				First_in_Function = TRUE;
+				Sinus_ON_off(ON);
 				return ST_TXT_SINUS;
 			}
 		}
