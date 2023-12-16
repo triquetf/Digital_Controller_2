@@ -29,5 +29,5 @@ void Sinus_ON_off(char State);
 void SetPWMPeriode(int PWM);
 void SetPWMAmplitude(int Amplitude);
 void DentDeScie_ON(char State);
-
+void Set_Perdiode_sinus(char divFreq);
 #endif 

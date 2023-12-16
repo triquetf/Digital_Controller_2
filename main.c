@@ -657,7 +657,7 @@ void USART0_RX(volatile char *Trame_USART0)
 			}
 			else{
 				First_in_Function = TRUE;
-				void SetPWMAmplitude(AmplitudeSinus);
+				SetPWMAmplitude(AmplitudeSinus);
 				return ST_TXT_SINUS;
 			}
 		}
@@ -669,13 +669,34 @@ void USART0_RX(volatile char *Trame_USART0)
 		// Arnaud + Julien + Emre + Charles
 		//return ST_FCT_SINUS_PERIODE;static unsigned char First_in_Function = TRUE;
 		static unsigned char First_in_Function = TRUE;
+		static int divFreq = 0;
+		char String[4];
+		static unsigned char Freq[] ={50,25,17,13,10,8,7,6,5,5};
+		
 		if (First_in_Function){
 			First_in_Function = FALSE;
+			itoa(Freq[divFreq], String, 10);
+			cli();lcd_gotoxy(0,1);lcd_puts("Frequence:   Hz");lcd_gotoxy(10,1);lcd_puts(String);sei();
 		}
 		else{
 			if (input != ENTER){
+				switch (input){
+					case UP :
+						divFreq--;
+						if (divFreq<0){divFreq =0;}
+						itoa(Freq[divFreq], String, 10);
+						cli();lcd_gotoxy(10,1);lcd_puts("   ");lcd_gotoxy(10,1);lcd_puts(String);sei();
+						break;
+					case DOWN :
+						divFreq++;
+						if (divFreq>8){ divFreq = 8;}
+						itoa(Freq[divFreq], String, 10);
+						cli();lcd_gotoxy(10,1);lcd_puts("   ");lcd_gotoxy(10,1);lcd_puts(String);sei();
+				}
 			}
 			else{
+				if (divFreq == 8){ divFreq=9;}
+				Set_Perdiode_sinus(divFreq+1);
 				First_in_Function = TRUE;
 				return ST_TXT_SINUS;
 			}
