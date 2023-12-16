@@ -3,37 +3,57 @@
 #include "PWM.h"
 #include "Main.h"
 
+// const unsigned char sinewave_data[]= {
+// 	128, 134, 140, 146, 152, 158, 164, 170, 176, 182, 188, 194, 200, 206, 212, 218, //16
+// 	224, 230, 236, 242, 248, 254, 255, 254, 248, 242, 236, 230, 224, 218, 212, 206, //16
+// 	200, 194, 188, 182, 176, 170, 164, 158, 152, 146, 140, 134, 128, 122, 116, 110, //16
+// 	104, 98, 92, 86, 80, 74, 68, 62, 56, 50, 44, 38, 32, 26, 20, 14, 8, 2, 1, 2, 8, //21
+// 	14, 20, 26, 32, 38, 44, 50, 56, 62, 68, 74, 80, 86, 92, 98, 104, 110, 116, 122  //19
+// };
 const unsigned char sinewave_data[]= {
-	128, 134, 140, 146, 152, 158, 164, 170, 176, 182, 188, 194, 200, 206, 212, 218, //16
-	224, 230, 236, 242, 248, 254, 255, 254, 248, 242, 236, 230, 224, 218, 212, 206, //16
-	200, 194, 188, 182, 176, 170, 164, 158, 152, 146, 140, 134, 128, 122, 116, 110, //16
-	104, 98, 92, 86, 80, 74, 68, 62, 56, 50, 44, 38, 32, 26, 20, 14, 8, 2, 1, 2, 8, //21
-	14, 20, 26, 32, 38, 44, 50, 56, 62, 68, 74, 80, 86, 92, 98, 104, 110, 116, 122  //19
+100,   106,   113,   119,   125,   131,   137,   143,   149,   154,
+160,   165,   169,   174,   178,   182,   185,   189,   191,   194,
+196,   198,   199,   200,   200,   200,   200,   199,   198,   197,
+195,   193,   190,   187,   184,   180,   176,   172,   167,   162,
+157,   152,   146,   140,   134,   128,   122,   116,   110,   103,
+ 97,    90,    84,    78,    72,    66,    60,    54,    48,    43,
+ 38,    33,    28,    24,    20,    16,    13,    10,     7,     5,
+  3,     2,     1,     0,     0,     0,     0,     1,     2,     4,
+  6,     9,    11,    15,    18,    22,    26,    31,    35,    40,
+ 46,    51,    57,    63,    69,    75,    81,    87,    94,   100
 };
+
 int NombrePWM = 1;
 unsigned char SINUS_ON = FALSE;
 int PWMPeriode = 255;
 int AmplSin = 5;
 unsigned char DentDeScie = TRUE;
+int DiviseurFrequence = 1;
 
 void incrementSin(){
 	if(SINUS_ON){
-		static char index = 0;
+		static int index = 0;
+		static int DivFreq = 0;
 		switch(NombrePWM){
 			case 1 : 
-				setDutyCycle_1A((sinewave_data[index%88]*AmplSin)/5);
+				setDutyCycle_1A((sinewave_data[index%100])*AmplSin/5);
 				break;
 			case 2 :
-				setDutyCycle_1A((sinewave_data[index%88]*AmplSin)/5);
-				setDutyCycle_1B((sinewave_data[(index+40)%88]*AmplSin)/5);
+				setDutyCycle_1A((sinewave_data[index%100])*AmplSin/5);
+				setDutyCycle_1B((sinewave_data[(index+50)%100])*AmplSin/5);
 				break;
 			case 3:
-				setDutyCycle_1A((sinewave_data[index%88]*AmplSin)/5);
-				setDutyCycle_1B((sinewave_data[(index+26)%88]*AmplSin)/5);
-				setDutyCycle_2B((sinewave_data[(index+52)%88]*AmplSin)/5);
+				setDutyCycle_1A((sinewave_data[index%100])*AmplSin/5);
+				setDutyCycle_1B((sinewave_data[(index+33)%100])*AmplSin/5);
+				setDutyCycle_2B((sinewave_data[(index+66)%100])*AmplSin/5);
 				break;
 		}
-		index++;
+		DivFreq++;
+		if (DivFreq == DiviseurFrequence)
+		{
+			index++;
+			DivFreq = 0;
+		}
 	}	
 }
 //Initialisation du PWM_1
@@ -237,14 +257,14 @@ void PWM_ManualMode_DutyCycle(int DutyCycle){
 void Sinus_ON_off(char State){
 	switch(NombrePWM){
 		case 1:
-		PWM_1_A_init(0x2,227);
+		PWM_1_A_init(0x2,200);
 		break;
 		case 2:
-		PWM_1_A_B_init(0x2,227);
+		PWM_1_A_B_init(0x2,200);
 		break;
 		case 3:
-		PWM_1_A_B_init(0x2,227);
-		PWM_2_B_init(0x2,227); // TOP = 255; 8 bits
+		PWM_1_A_B_init(0x2,200);
+		PWM_2_B_init(0x2,200); 
 		break;
 	}
 	SINUS_ON = State;
@@ -266,3 +286,6 @@ void DentDeScie_ON(char State){
 	DentDeScie = State;
 }
 
+void Set_Perdiode_sinus(char divFreq){
+	DiviseurFrequence = divFreq;
+}
