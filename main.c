@@ -309,36 +309,24 @@ void USART0_RX(volatile char *Trame_USART0)
 		static unsigned char First_in_Function = TRUE;
 		
 		if (First_in_Function){
-				itoa(PeriodePWM*12.8, String, 10);
-				cli();lcd_gotoxy(0,1);lcd_puts("Periode:    ms");lcd_gotoxy(8,1);lcd_puts(String);sei();
+				itoa(PeriodePWM*12.8/100, String, 10); //Changer période  
+				cli();lcd_gotoxy(0,1);lcd_puts("Periode:   ms");lcd_gotoxy(9,1);lcd_puts(String);sei();
 				First_in_Function = FALSE;
 		}
 		else{
 			if (input != ENTER){
 				switch(input){
-					case LEFT :
+					case DOWN :
 						PeriodePWM -= 10;
 						if (PeriodePWM<0){PeriodePWM=0;}
-						itoa(PeriodePWM*12.8, String, 10);
-						cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei();
-						break;
-					case DOWN :
-					PeriodePWM --;
-						if (PeriodePWM<0){PeriodePWM=0;}
-						itoa(PeriodePWM*12.8, String, 10);
-						cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei();
+						itoa(PeriodePWM*12.8/100, String, 10);
+						cli();lcd_gotoxy(9,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei();
 						break;
 					case UP:
-						PeriodePWM ++;
-						if (PeriodePWM>255){PeriodePWM=255;}
-						itoa(PeriodePWM*12.8, String, 10);
-						cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei();
-						break;
-					case RIGHT:
 						PeriodePWM +=10;
 						if (PeriodePWM>255){PeriodePWM=255;}
-						itoa(PeriodePWM*12.8, String, 10);
-						cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei();
+						itoa(PeriodePWM*12.8/100, String, 10);
+						cli();lcd_gotoxy(9,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei();
 						break;
 				}
 				
@@ -657,8 +645,8 @@ void USART0_RX(volatile char *Trame_USART0)
 			}
 			else{
 				First_in_Function = TRUE;
-				SetPWMAmplitude(AmplitudeSinus);
-				return ST_TXT_SINUS;
+				 SetSinAmplitude(AmplitudeSinus);
+				return ST_TXT_SINUS_PERIODE;
 			}
 		}
 		return ST_FCT_SINUS_AMPLITUDE;	
@@ -698,7 +686,7 @@ void USART0_RX(volatile char *Trame_USART0)
 				if (divFreq == 8){ divFreq=9;}
 				Set_Perdiode_sinus(divFreq+1);
 				First_in_Function = TRUE;
-				return ST_TXT_SINUS;
+				return ST_TXT_ON_OFF_SINUS;
 			}
 		}
 		return ST_FCT_SINUS_PERIODE;
