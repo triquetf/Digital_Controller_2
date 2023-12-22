@@ -4,15 +4,15 @@
 #include "TIMERS.h"
 #include "USART.h"
 #include "lcd.h"
-#include "DS3232.h"
 #include "I2C_Master.h"
+#include "DS3232.h"
+#include "SPI.h"
 #include <avr/interrupt.h>
 #include <avr/io.h>
-#include <avr/delay.h>
 
 //Variables globales
 //char Lcd_TXT[6] [6] = {" ","GREEN","DOWN","RED","ENTER","BLUE"} ;
-char firstInFunction = TRUE;
+
 //Callback Chrono
 void (*My_CB[MAX_CALLBACKS])(void);
 unsigned int Time_CB[MAX_CALLBACKS];
@@ -34,6 +34,13 @@ unsigned char Latch_Button;
 //Variables pour la machine d'états
 unsigned char state;  // holds the current state, according to "menu.h"
 char Message_LCD[17];
+
+//Sleep 
+uint16_t findelamesure;
+extern unsigned char IDCB_DATALOG_ON ;
+extern unsigned char IDCB_Sleepmodeon ;
+unsigned char TIMEOUT = FALSE;
+uint16_t  nombredinterruption = 0;
 
 // DECLARATION DES FONCTIONS INTERNES
 
@@ -116,9 +123,9 @@ void OS_Start(void)
  	TIMER0_Init_1ms(); //A partir d'ici, interruption toutes les ms par Timer0
 	// Configuration USART0 pour 9600 baud avec interruption en réception
 	USART0_Init_115200_INT_ON_RX();
+	TWI_Master_Initialise();
+	SPI_MasterInit();
 	
-	// For debug
-	//Usart0_Tx_String("Usart0 OK");
 	
 	
 	// Initialisation des interruptions, on autorise toutes les interruptions
@@ -136,11 +143,11 @@ void OS_Start(void)
 	nextstate = ST_TXT_WELCOME;
 	statetext = Txt_WELCOME;
 	pStateFunc = NULL;
-	_delay_ms(300);
+	//RTC_Clock_Set( 30,30,12,3,23,11,33);
+	//RTC_Clock_Set_Heure(30,30,12);
+	
  	sei();  
 
-	// RTC_Alarm_Set_Seconde(10);
-	
  	// BOUCLE INFINIE
 	// Boucle principale de l'OS d'où on ne sort jamais
 	 while(1)
@@ -187,7 +194,6 @@ void OS_Start(void)
 			 if (input != NONE)
 			 {
 				 nextstate = StateMachine(state, input);
-				 //RTC_Alarm_Set_Seconde(RTC_Clock_Read_Byte(SECONDE)+10);
 			 }
 		 }
 		 if (nextstate != state)  // il y a changement d'état
@@ -246,22 +252,27 @@ ISR(TIMER0_OVF_vect)
 // INTERRUPTION INT0
 // ******************
 ISR(INT0_vect)
-{	
-	Usart0_Tx_String("Alarme sonne");Usart0_Tx(0X0D);
+{
+	++nombredinterruption ;
+	TIMEOUT = TRUE;
+	Usart0_Tx_String("Alarme sonne");
+	if (nombredinterruption == findelamesure){
+		Callbacks_Remove_Timer(IDCB_DATALOG_ON);
+		Callbacks_Remove_Timer(IDCB_Sleepmodeon);
+		Usart0_Tx_String(" Fin de l'entrée des données");
+	}
 }
 
-// ******************
-// INTERRUPTION TIMER1
-// ******************
-ISR(TIMER1_OVF_vect) {			
-// 	TIMER1_CAPT Timer/Counter1 Capture Event
-// 	TIMER1_COMPA Timer/Counter1 Compare Match A
-// 	TIMER1_OVF Timer/Counter1 Overflow
-// For debug :
-//	Usart0_Tx_String("what");Usart0_Tx(0X0D);
+ISR(TIMER1_OVF_vect) {
+	// 	TIMER1_CAPT Timer/Counter1 Capture Event
+	// 	TIMER1_COMPA Timer/Counter1 Compare Match A
+	// 	TIMER1_OVF Timer/Counter1 Overflow
+	// For debug :
+	//	Usart0_Tx_String("what");Usart0_Tx(0X0D);
 
 	incrementSin();
 }
+
 // ***************************************
 // INTERRUPTION USART0 en RX (TERMINAL PC)
 // ***************************************
@@ -307,3 +318,11 @@ ISR(PCINT2_vect)
 	else
 	Button = NONE;	
 }
+
+
+
+
+
+
+
+

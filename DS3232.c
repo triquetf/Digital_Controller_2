@@ -19,15 +19,15 @@ char Day_Name[7][9]={"Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","S
 
 // This function initializes the RTC clock with the provided
 // values for the hour, date, and day. It populates the RTC_buf
-// buffer with this data formatted for communication with the 
+// buffer with this data formatted for communication with the
 // RTC clock via I2C.
 void RTC_Clock_Set( unsigned char Sec,
-					unsigned char Min,
-					unsigned char Hrs,
-					unsigned char Day,
-					unsigned char Date,
-					unsigned char Month,
-					unsigned char Year)
+unsigned char Min,
+unsigned char Hrs,
+unsigned char Day,
+unsigned char Date,
+unsigned char Month,
+unsigned char Year)
 {
 	RTC_buf[0] = ((RTC_ADDRESS<<1)|0);		//Salve Address + W
 	RTC_buf[1] = SECONDE;					//First Address of DS1307 register
@@ -39,27 +39,27 @@ void RTC_Clock_Set( unsigned char Sec,
 	RTC_buf[7] = convertchartoBCD(MOIS, Month);
 	RTC_buf[8] = convertchartoBCD(ANNEE, Year);
 	TWI_Start_Transceiver_With_Data(RTC_buf, 9);
-	Usart0_Tx_String("Clock Set");Usart0_Tx(0X0D);
+	//Usart0_Tx_String("Clock Set");Usart0_Tx(0X0D);
 }
 
 
-// This function initializes the RTC alarm with the 
-// 	provided values for the exact time and day of the 
+// This function initializes the RTC alarm with the
+// 	provided values for the exact time and day of the
 // 	month. It populates the RTC_buf buffer with this data
-// 	 formatted for communication with the RTC 
+// 	 formatted for communication with the RTC
 // 	 clock via I2C.
 void RTC_Alarm_Set(         unsigned char Sec,
-							unsigned char Min,
-							unsigned char Hrs,
-							unsigned char Date)
+unsigned char Min,
+unsigned char Hrs,
+unsigned char Date)
 {
 	// Configuration des registres pour autoriser l'alarme
 	RTC_buf[0] = ((RTC_ADDRESS << 1) | 0); // Salve Address + W
 	RTC_buf[1] = CONTROL;                  // Adresse du registre de contrôle
 	// REGISTRE CONTROLE : Bit2 : Enables interrupt
-	//					   Bit0 : Enables interrupts related to Alarm 1 
+	//					   Bit0 : Enables interrupts related to Alarm 1
 	RTC_buf[2] = 0b00000101;
-	// REGISTRE Status Register	: Bit 0 : Set to 0 to indicate that the alarm has not yet matched the time of the DS3232.		
+	// REGISTRE Status Register	: Bit 0 : Set to 0 to indicate that the alarm has not yet matched the time of the DS3232.
 	RTC_buf[3] = 0b00000000;
 	TWI_Start_Transceiver_With_Data(RTC_buf, 4);
 
@@ -67,21 +67,21 @@ void RTC_Alarm_Set(         unsigned char Sec,
 	RTC_buf[0] = ((RTC_ADDRESS << 1) | 0); // Salve Address + W
 	RTC_buf[1] = SecAlarm1;                 // Adresse du registre d'alarme de seconde
 	RTC_buf[2] = convertchartoBCD(SECONDE, Sec);
-	RTC_buf[3] = convertchartoBCD(MINUTE, Min); 
-	RTC_buf[4] = convertchartoBCD(HEURE, Hrs);  
-	RTC_buf[5] = convertchartoBCD(DATE, Date);  
+	RTC_buf[3] = convertchartoBCD(MINUTE, Min);
+	RTC_buf[4] = convertchartoBCD(HEURE, Hrs);
+	RTC_buf[5] = convertchartoBCD(DATE, Date);
 	TWI_Start_Transceiver_With_Data(RTC_buf, 6);
-	Usart0_Tx_String("Alarm set");Usart0_Tx(0X0D);
+	//Usart0_Tx_String("Alarm set");Usart0_Tx(0X0D);
 }
 
 
-// This function initializes the date of the RTC. 
+// This function initializes the date of the RTC.
 // It populates the RTC_buf buffer with this data
-//  formatted for communication with the RTC 
+//  formatted for communication with the RTC
 //  clock via I2C.
 void RTC_Clock_Set_Date(	unsigned char Date,
-							unsigned char Month,
-							unsigned char Year)
+unsigned char Month,
+unsigned char Year)
 {
 	RTC_buf[0] = ((RTC_ADDRESS << 1) | 0); // Salve Address + W
 	RTC_buf[1] = 4;                        // Adresse du registre de Date
@@ -89,16 +89,16 @@ void RTC_Clock_Set_Date(	unsigned char Date,
 	RTC_buf[3] = convertchartoBCD(MOIS, Month);
 	RTC_buf[4] = convertchartoBCD(ANNEE, Year);
 	TWI_Start_Transceiver_With_Data(RTC_buf, 5);
-	Usart0_Tx_String("Clock Set");Usart0_Tx(0X0D);
+	//Usart0_Tx_String("Clock Set");Usart0_Tx(0X0D);
 }
 
 // This function initializes the time of the RTC.
 //  It populates the RTC_buf buffer with this data
-//   formatted for communication with the RTC 
+//   formatted for communication with the RTC
 //   clock via I2C.
 void RTC_Clock_Set_Heure(	unsigned char Sec,
-							unsigned char Min,
-							unsigned char Heure)
+unsigned char Min,
+unsigned char Heure)
 {
 	RTC_buf[0] = ((RTC_ADDRESS << 1) | 0);  // Salve Address + W
 	RTC_buf[1] = SECONDE;                   // Adresse du registre de SECONDE
@@ -106,15 +106,15 @@ void RTC_Clock_Set_Heure(	unsigned char Sec,
 	RTC_buf[3] = convertchartoBCD(MINUTE, Min);
 	RTC_buf[4] = convertchartoBCD(HEURE, Heure);
 	TWI_Start_Transceiver_With_Data(RTC_buf, 5);
-	Usart0_Tx_String("Clock Set");Usart0_Tx(0X0D);
+	//Usart0_Tx_String("Clock Set");Usart0_Tx(0X0D);
 }
 
 
-// This function reads the data from the RTC clock. 
-// It prepares the RTC_buf buffer to request information 
-// via I2C, then initiates the transmission to obtain the 
-// clock data (excluding alarms). After the transmission, 
-// it waits for the I2C transmission to complete 
+// This function reads the data from the RTC clock.
+// It prepares the RTC_buf buffer to request information
+// via I2C, then initiates the transmission to obtain the
+// clock data (excluding alarms). After the transmission,
+// it waits for the I2C transmission to complete
 // before proceeding.
 void RTC_Clock_Read_All(void)
 {
@@ -134,11 +134,11 @@ void RTC_Clock_Read_All(void)
 	convertBCDtoChar(ANNEE,TWI_buf[7]);
 }
 
-// This function initializes the RTC alarm. 
-// The alarm sounds when the seconds provided 
-// in the function match the RTC seconds. It 
-// populates the RTC_buf buffer with this data 
-// formatted for communication with the RTC 
+// This function initializes the RTC alarm.
+// The alarm sounds when the seconds provided
+// in the function match the RTC seconds. It
+// populates the RTC_buf buffer with this data
+// formatted for communication with the RTC
 // clock via I2C.
 void RTC_Alarm_Set_Seconde( unsigned char Sec)
 {
@@ -148,7 +148,7 @@ void RTC_Alarm_Set_Seconde( unsigned char Sec)
 	// REGISTRE CONTROLE : Bit2 : Enables interrupt
 	//					   Bit0 : Enables interrupts related to Alarm 1
 	RTC_buf[2] = 0b00000101;
-	// REGISTRE Status Register	: Bit 0 : Set to 0 to indicate that the alarm has not yet matched the time of the DS3232.	
+	// REGISTRE Status Register	: Bit 0 : Set to 0 to indicate that the alarm has not yet matched the time of the DS3232.
 	RTC_buf[3] = 0b00000000;
 	TWI_Start_Transceiver_With_Data(RTC_buf, 4);
 	// Configuration de l'alarme
@@ -160,12 +160,12 @@ void RTC_Alarm_Set_Seconde( unsigned char Sec)
 	RTC_buf[4] = 0b10000000;
 	RTC_buf[5] = 0b10000000;
 	TWI_Start_Transceiver_With_Data(RTC_buf, 6);
-	Usart0_Tx_String("Alarm sec set");Usart0_Tx(0X0D);
+	//Usart0_Tx_String("Alarm sec set");Usart0_Tx(0X0D);
 }
 
-// This function reads the requested byte from the RTC. 
-// It populates the RTC_buf buffer with the address of the 
-// desired byte, then listens to the RTC and fills the 
+// This function reads the requested byte from the RTC.
+// It populates the RTC_buf buffer with the address of the
+// desired byte, then listens to the RTC and fills the
 // TWI Buffer.
 unsigned char RTC_Clock_Read_Byte(unsigned char Adr_Pointer)
 {
@@ -175,7 +175,7 @@ unsigned char RTC_Clock_Read_Byte(unsigned char Adr_Pointer)
 	RTC_buf[0] = ((RTC_ADDRESS<<1)|1);		//Salve Address + R
 	TWI_Start_Transceiver_With_Data(RTC_buf, 2);
 	while ( TWI_Transceiver_Busy() );       // Wait until TWI is ready for next transmission.
- 	unsigned char Byte = convertBCDtoChar(SECONDE,TWI_buf[1]); 
+	unsigned char Byte = convertBCDtoChar(SECONDE,TWI_buf[1]);
 	// FOR DEBUG
 	// Usart0_Tx(Byte);Usart0_Tx(0X0D);
 	return Byte;
@@ -192,7 +192,7 @@ unsigned char convertBCDtoChar(unsigned char AddressOfData, unsigned char Regist
 	switch (AddressOfData)
 	{
 		case SECONDE :
-		Usart0_Tx_String("Secondes : ");
+		//Usart0_Tx_String("Secondes : ");
 		// Isolation of the tens in BCD and shifting by 4 bits to convert it into a tens digit.
 		dizaine = ((Register_Data & 0b01110000)>> 4);
 		// Isolation des unités dans le BCD
@@ -277,7 +277,7 @@ unsigned char convertchartoBCD(unsigned char addressofdata, unsigned char toconv
 
 	switch (addressofdata)
 	{
-		// Shift by 4 bits for the tens digit and add the units to the last 
+		// Shift by 4 bits for the tens digit and add the units to the last
 		// 4 bits for seconds, hours, minutes, dates, months, years.
 		case SECONDE :
 		case HEURE :

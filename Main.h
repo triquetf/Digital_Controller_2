@@ -1,15 +1,19 @@
 #ifndef _main_h_
 #define _main_h_
 
+enum{SENSOR_CURRENT,SENSOR_ADC,MEMORY_EEPROM,MEMORY_SRAM};
 // INCLUDE (si applicable)
 // TEST GIT - BRANCH
-// DEFINE 
+// DEFINE
 
 
 // Gestion registre par bit unique
 #define SET_BIT(port,bit)  (port |= (1<<bit))   //set bit in port
 #define CLR_BIT(port,bit)  (port &= ~(1<<bit))  //clear bit in port
 #define TOGGLE_IO(port,bit) (port ^= (1<<bit))  //toggle
+
+#define SRAM_OFF CLR_BIT(PORTD,PORTD7)
+#define SRAM_ON SET_BIT(PORTD,PORTD7)
 
 #define TRUE				1
 #define FALSE				0
@@ -168,7 +172,12 @@ enum {NONE,UP, DOWN, LEFT, RIGHT, ENTER};	// Used with the button variable
 
 //CALLBACK
 void Switch_LED(void);	// callback timer --> cligotement de la LED
+void Sleppmodeoff(void);
+void SleepModeOn(void);
 void USART0_RX(volatile char *Trame_USART0);	// callback USART0 --> gestion de la commande recue via le port serie.
+void Sleppmodeoff(void);
+void SleepModeOn(void);
+
 
 //STATE MACHINE
 char Set_Pwm_Red(char input);
@@ -222,5 +231,8 @@ char Sinus_On_Off(char input);
 //AUTRES
 int EDIT_VALUE_0_99(int Initial_Value, char input);
 int EDIT_VALUE(int Initial_Value, char input, int Value_Min, int Value_Max);
+void mesure (void);
+void tableau(void);
+
 
 #endif
