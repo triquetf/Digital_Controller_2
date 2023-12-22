@@ -1,3 +1,28 @@
+/*****************************************************************************
+*
+* Atmel Corporation
+*
+* File              : TWI_Master.c
+* Compiler          : IAR EWAAVR 2.28a/3.10c
+* Revision          : $Revision: 1.13 $
+* Date              : $Date: 24. mai 2004 11:31:20 $
+* Updated by        : $Author: ltwa $
+*
+* Support mail      : avr@atmel.com
+*
+* Supported devices : All devices with a TWI module can be used.
+*                     The example is written for the ATmega16
+*
+* AppNote           : AVR315 - TWI Master Implementation
+*
+* Description       : This is a sample driver for the TWI hardware modules.
+*                     It is interrupt driveren. All functionality is controlled through 
+*                     passing information to and from functions. Se main.c for samples
+*                     of how to use the driver.
+*
+*
+****************************************************************************/
+
 #include "avr/io.h"
 #include <avr/interrupt.h>
 #include "I2C_Master.h"
@@ -22,15 +47,7 @@ void TWI_Master_Initialise(void)
          (0<<TWEA)|(0<<TWSTA)|(0<<TWSTO)|           // No Signal requests.
          (0<<TWWC);                                 //
 }    
-   
-// TWEN est à 1 pour activer le I2C 
-// TWIE est à 1 quand on est en communication
-// TWINT est à 1 quand il a fini son job, et 0 quand il doit recommencer
-// TWEA génère une impulsion sur le bus à 1, et 0 pour déconnecter du bus temporairement
-// TWSTA est à 1 quand on veut devenir maitre
-// TWSTO génère un arrêt sur le bus puis est remis direct à 0
-// TWWC est à 1 quand on essaye d'écrire quand TWINT est bas
-
+    
 /****************************************************************************
 Call this function to test if the TWI_ISR is busy transmitting.
 ****************************************************************************/

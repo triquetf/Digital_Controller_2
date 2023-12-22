@@ -1,4 +1,30 @@
-#define TWI_BUFFER_SIZE 10   // Set this to the largest message size that will be sent including address byte.
+/*****************************************************************************
+*
+* Atmel Corporation
+*
+* File              : TWI_Master.h
+* Compiler          : IAR EWAAVR 2.28a/3.10c
+* Revision          : $Revision: 1.13 $
+* Date              : $Date: 24. mai 2004 11:31:22 $
+* Updated by        : $Author: ltwa $
+*
+* Support mail      : avr@atmel.com
+*
+* Supported devices : All devices with a TWI module can be used.
+*                     The example is written for the ATmega16
+*
+* AppNote           : AVR315 - TWI Master Implementation
+*
+* Description       : Header file for TWI_Master.c
+*                     Include this file in the application.
+*
+****************************************************************************/
+
+/****************************************************************************
+  TWI Status/Control register definitions
+****************************************************************************/
+// by default 10
+#define TWI_BUFFER_SIZE 20   // Set this to the largest message size that will be sent including address byte.
 
 #define TWI_TWBR            0x02        // TWI Bit rate Register setting.
                                         // See Application note for detailed 
