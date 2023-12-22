@@ -10,7 +10,7 @@ void setDutyCycle_2B(double Duty_cycle);
 
 void PWM_1_A_B_initOPPOSEE(unsigned char Prescaler, unsigned int Top_1);
 
-// Initialization of PWM_1 
+// Initialization of PWM_1
 void PWM_1_A_B_init(unsigned char Prescaler, unsigned int Top_1);
 // Initialization of PWM_2
 void PWM_2_B_init(unsigned char Prescaler, unsigned int Top_2);
@@ -30,4 +30,4 @@ void SetPWMPeriode(int PWM);
 void SetSinAmplitude(int Amplitude);
 void DentDeScie_ON(char State);
 void Set_Perdiode_sinus(char divFreq);
-#endif 
+#endif

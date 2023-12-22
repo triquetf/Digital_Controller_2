@@ -23,22 +23,22 @@ unsigned char Year);
 // the day, hour, minute, and second entered in the function match
 // with the day, hour, minute, and second of the DS3232.
 void RTC_Alarm_Set(         unsigned char Sec,
-							unsigned char Min,
-							unsigned char Hrs,
-							unsigned char Date);
+unsigned char Min,
+unsigned char Hrs,
+unsigned char Date);
 
 // This function allows setting the exact date of the DS3232.
-// ex : RTC_Clock_Set_Date(JJ,MM,AA); 
+// ex : RTC_Clock_Set_Date(JJ,MM,AA);
 void RTC_Clock_Set_Date(	unsigned char Date,
-							unsigned char Month,
-							unsigned char Year);
+unsigned char Month,
+unsigned char Year);
 
 // This function allows setting the exact time of the DS3232.
 // ex : RTC_Clock_Set_Heure(s,min,h);
 void RTC_Clock_Set_Heure(	unsigned char Sec,
-							unsigned char Min,
-							unsigned char Heure);
-							
+unsigned char Min,
+unsigned char Heure);
+
 void RTC_Alarm_Set_Seconde( unsigned char Sec);
 
 // This function returns the value of all registers of the clock.

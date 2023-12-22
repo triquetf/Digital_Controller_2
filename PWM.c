@@ -8,16 +8,16 @@
 // t = linspace(0,2*pi)
 // x = floor((sin(t)+1)*0.5*201)
 const unsigned char sinewave_data[]= {
-100,   106,   113,   119,   125,   131,   137,   143,   149,   154,
-160,   165,   169,   174,   178,   182,   185,   189,   191,   194,
-196,   198,   199,   200,   200,   200,   200,   199,   198,   197,
-195,   193,   190,   187,   184,   180,   176,   172,   167,   162,
-157,   152,   146,   140,   134,   128,   122,   116,   110,   103,
- 97,    90,    84,    78,    72,    66,    60,    54,    48,    43,
- 38,    33,    28,    24,    20,    16,    13,    10,     7,     5,
-  3,     2,     1,     0,     0,     0,     0,     1,     2,     4,
-  6,     9,    11,    15,    18,    22,    26,    31,    35,    40,
- 46,    51,    57,    63,    69,    75,    81,    87,    94,   100
+	100,   106,   113,   119,   125,   131,   137,   143,   149,   154,
+	160,   165,   169,   174,   178,   182,   185,   189,   191,   194,
+	196,   198,   199,   200,   200,   200,   200,   199,   198,   197,
+	195,   193,   190,   187,   184,   180,   176,   172,   167,   162,
+	157,   152,   146,   140,   134,   128,   122,   116,   110,   103,
+	97,    90,    84,    78,    72,    66,    60,    54,    48,    43,
+	38,    33,    28,    24,    20,    16,    13,    10,     7,     5,
+	3,     2,     1,     0,     0,     0,     0,     1,     2,     4,
+	6,     9,    11,    15,    18,    22,    26,    31,    35,    40,
+	46,    51,    57,    63,    69,    75,    81,    87,    94,   100
 };
 
 // Initialization of default values
@@ -227,18 +227,18 @@ void incrementSin(){
 		static int index = 0;
 		static int DivFreq = 0;
 		switch(NombrePWM){
-			case 1 : 
-				 OCR1A =(sinewave_data[index%100])*AmplSin;
-				break;
+			case 1 :
+			OCR1A =(sinewave_data[index%100])*AmplSin;
+			break;
 			case 2 :
-				OCR1A = (sinewave_data[index%100])*AmplSin;
-				OCR1B = (sinewave_data[(index+50)%100])*AmplSin;
-				break;
+			OCR1A = (sinewave_data[index%100])*AmplSin;
+			OCR1B = (sinewave_data[(index+50)%100])*AmplSin;
+			break;
 			case 3:
-				OCR1A = (sinewave_data[index%100])*AmplSin;
-				OCR1B = (sinewave_data[(index+33)%100])*AmplSin;
-				OCR2B = (sinewave_data[(index+66)%100])*AmplSin;
-				break;
+			OCR1A = (sinewave_data[index%100])*AmplSin;
+			OCR1B = (sinewave_data[(index+33)%100])*AmplSin;
+			OCR2B = (sinewave_data[(index+66)%100])*AmplSin;
+			break;
 		}
 		DivFreq++;
 		if (DivFreq == DiviseurFrequence)
@@ -246,5 +246,5 @@ void incrementSin(){
 			index++;
 			DivFreq = 0;
 		}
-	}	
+	}
 }

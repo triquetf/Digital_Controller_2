@@ -15,8 +15,7 @@ void Init_Hardware(void)
 {
 	/* Configuration I/O */
 	//LED en PD7 en mode Output
-	SET_BIT(DDRD,DDD7);
-	
+  	SET_BIT(DDRD,DDD7);
 	// LED OFF au démarrage
 	//Led = FALSE;
 	CLR_BIT(PORTD,PD7);
@@ -25,23 +24,20 @@ void Init_Hardware(void)
 	// Contacts RELAIS ouverts au démarrage
 	//Relais = FALSE;
 	//CLR_BIT(PORTD,PD6);
+	// Bouton poussoir en PD2 en mode Input avec pull up
+	//CLR_BIT(DDRD,DDD2);
+	// Pull UP en PD2 enabled
+	//SET_BIT(PORTD,PD2);
 	// Contact secondaire relais en PA6 en mode Input avec pull up
 	//CLR_BIT(DDRA,DDA6);
 	// Pull UP en PA6 enabled
 	//SET_BIT(PORTA,PA6);
-	
-	// Wake-up de la DS3232 en PD2 en mode Input avec pull up(nécessaire car alarme : flan descendant
-	CLR_BIT(DDRD,DDD2);
-	SET_BIT(PORTD,PD2);
-	// Interruption externe via INT0 de la broche PD2 enabled ( Wake up)
-	SET_BIT(EIMSK,INT0);
+	// Interruption externe via INT0 de la broche PD2 enabled
+	//SET_BIT(EIMSK,INT0);
 	// Interruption sur flanc descendant
 	//(EICRA) ISC01 = 1 |ISC00 = 0
-	SET_BIT(EICRA,ISC01);
-	CLR_BIT(EICRA,ISC00);
-	
-	
-	
+	//SET_BIT(EICRA,ISC01);
+	//CLR_BIT(EICRA,ISC00);
 	
 	// Configuration clavier 5 touches
 	// TOUCHES UP (PC3),DOWN (PC4), LEFT (PC5), RIGHT (PC6), ENTER (PC7)
@@ -72,11 +68,33 @@ void Init_Hardware(void)
 	
 	// PWM
 	// PWM1B sur PD4, Output Mode
-	SET_BIT(DDRD,DDD4);
+	//SET_BIT(DDRD,DDD4);
 	// PWM1A sur PD5, Output Mode
-	SET_BIT(DDRD,DDD5);
+	//SET_BIT(DDRD,DDD5);
 	// PWM3A sur PB6, Output Mode
-	SET_BIT(DDRD,DDD6);
+	//SET_BIT(DDRB,DDB6);
+	
+	// Wake-up de la DS3232 en PD2 en mode Input avec pull up(nécessaire car alarme : flan descendant
+	CLR_BIT(DDRD,DDD2);
+	SET_BIT(PORTD,DDD2);
+	// Interruption externe via INT0 de la broche PD2 enabled ( Wake up)
+	SET_BIT(EIMSK,INT0);
+	// Interruption sur flanc descendant
+	//(EICRA) ISC01 = 1 |ISC00 = 0
+	SET_BIT(EICRA,ISC01);
+	CLR_BIT(EICRA,ISC00);
+	
+// PWM
+
+	               // PWM1B sur PD4, Output Mode
+ SET_BIT(DDRD,DDD4);
+
+	               // PWM1A sur PD5, Output Mode
+ SET_BIT(DDRD,DDD5);
+
+	               // PWM3A sur PB6, Output Mode
+ SET_BIT(DDRD,DDD6);
+
 	
 }
 //CONTENU FONCTIONS INTERNES
