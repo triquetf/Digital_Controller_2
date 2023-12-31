@@ -12,9 +12,10 @@
 #define EEPROM_ADDRESS_1 0b1010100 // THe I²C address for the second bloc of the 24LC1025
 #define I2C_BUFFER_SIZE  4
 
-// modifier dans I²C master TWI_BUFFER_SIZE à 20
+// WARNING:  TWI_BUFFER_SIZE must be at 20
 
 unsigned char Eeprom_Read_0(uint16_t address);
+
 void EEPROM_Write_0(unsigned int ad, unsigned int nbr_byte, char msg[]);
 
 void EEPROM_Write_int(unsigned int ad, unsigned int nbr_int, int msg[]);

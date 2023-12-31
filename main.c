@@ -27,27 +27,34 @@ extern unsigned char TWI_buf[I2C_BUFFER_SIZE];
 extern uint16_t currentData;
 //sampling frequency
 int Sampling_Time_var=1;
-// Seconds, Minutes, Hours, Days Selection
-unsigned char seconds=0;
-unsigned char minutes=0;
-unsigned char hours=0;
-unsigned char days=0;
-uint32_t total_time=0;
-char status_date =0;
-// sensor and memory default selection
-unsigned char sensor_selection = SENSOR_CURRENT;
-unsigned char memory_selection = MEMORY_EEPROM;
+
+// Seconds, Minutes, Hours, Days Selection for Duration parts of the data logger.
+
+unsigned char seconds=0; // Seconds value from 0 to 255 because unsigned char, ok because seconds is between 0 and 60.
+unsigned char minutes=0; // Minutes value from 0 to 255 because unsigned char, ok because minutes is between 0 and 60.
+unsigned char hours=0;   // Hours value from 0 to 255 because unsigned char, ok because hours is between 0 and 24.
+unsigned char days=0;	 // Days value from 0 to 255 because unsigned char, ok because days is between 0 and 31.
+uint32_t total_time=0;   // Total time for duration in seconds on 32 bits because the maximum value can be 2.768.460 [s] for 60 [s]+60 [m]+24 [h]+31 [d]
+char status_date =0;     // Index to know wich value is modified
+
+// Sensor and memory selection default value for Sensor et Data_Storage part of the data logger
+
+unsigned char sensor_selection = SENSOR_CURRENT; // Current sensor choice by default
+unsigned char memory_selection = MEMORY_EEPROM; // EEPROM memory choice by default
+
 // EEPROM and SRAM related
-int eepromAddressMemory;
-unsigned long sramAddressMemory;
+
+int eepromAddressMemory; // Last EEPROM memory address
+unsigned long sramAddressMemory; // Last EEPROM memory address
 int sramcallmesure ;
+
 // Mesure batch lock 
 char First_Mesure = TRUE;
 // datalogger on off
-unsigned char IDCB_DATALOG_ON = 0;
-unsigned char ON = FALSE;
-extern unsigned char TIMEOUT;
-extern uint16_t  nombredinterruption;
+unsigned char IDCB_DATALOG_ON = 0;    
+unsigned char ON = FALSE;				 // State off the datalogger
+extern unsigned char TIMEOUT;			 // variable to determine whether we have entered the INT0 interrupt, which is the irruption triggered when the "alarm sounds"".
+extern uint16_t  nombredinterruption;    // the number of interruptions we 
 // sleep ID
 unsigned char IDCB_Sleepmodeoff = 0;
 unsigned char IDCB_Sleepmodeon = 0;
@@ -88,7 +95,7 @@ int main (void)
 //****************************************************************
 void Switch_LED(void)
 {
-	TOGGLE_IO(PORTD,PORTD7);
+	TOGGLE_IO(PORTD,PORTD7); //  Debug LED
 }
 
 
@@ -398,13 +405,13 @@ char Time(char input)
 	
 	char Adc(char input)
 	{
-		// Someone 
-		if (ON==FALSE)
+		if (ON==FALSE) // If data logger is off, sensor choice can be modified.
 		{
 			sensor_selection = SENSOR_ADC;
 			Usart0_Tx_String("ADC chosen");
 		}
-		else{
+		else // If data logger is on, sensor choice is locked.
+		{
 			Usart0_Tx_String("locked ADC");
 		}
 		return ST_TXT_ACTUATOR;
@@ -412,22 +419,23 @@ char Time(char input)
 	
 	char Current(char input)
 	{	
-		if (ON==FALSE)
+		if (ON==FALSE) // If data logger is off, sensor choice can be modified.
 		{
 			sensor_selection = SENSOR_CURRENT;
 			Usart0_Tx_String("CURRENT sensor chosen");
 		}
-		else{
+		else // If data logger is on, sensor choice is locked.
+		{
 			Usart0_Tx_String("locked CURRENT");
 		}
-		// Lukman N. & Rémi G
 		return ST_TXT_ACTUATOR;
 	}
 	
 	char Thermocouple(char input)
 	{
 		
-		// Pierre C. & Arnaud D.
+		//Not implemented yet on the board.
+		
 		return ST_TXT_ACTUATOR;
 	}
 	
@@ -756,105 +764,111 @@ char Time(char input)
 	
 	char Eeprom(char input)
 	{	
-		if (ON==FALSE)
+		if (ON==FALSE) // If data logger is off, memory choice can be modified.
 		{
 			memory_selection = MEMORY_EEPROM;
 			Usart0_Tx_String("EEPROM chosen");
 		}
-		else{
+		else // If data logger is on, memory choice is locked.
+		{
 			Usart0_Tx_String("EEPROM locked");
 		}
-		
-		// Florimond H. & Smaïn J.
 		return ST_TXT_MONITORING;
 	}
 	
 	char Sram(char input)
 	{	
-		if(ON==FALSE)
+		if(ON==FALSE) // If data logger is off, memory choice can be modified.
 		{
 		memory_selection = MEMORY_SRAM;
 		Usart0_Tx_String("SRAM chosen");
 		}
-		else{
+		else // If data logger is on, memory choice is locked.
+		{
 			Usart0_Tx_String("SRAM locked");
 		}
-	
-		
-		// Thibault T. & Maxime M.
 		return ST_TXT_MONITORING;
 	}
 	
 	char Monitoring(char input)
 	{
 		
-		// Someone
+		// Not implemented yet
+		
 		return ST_TXT_CONTRAST;
 	}
 	
 	char Contrast(char input)
 	{
-		// Pierre C. & Arnaud D.
+		// Not implemented yet
+		
 		return ST_TXT_DEBUG;
 	}
 	
 	char Debug(char input)
 	{
-		// Someone
+		// Not implemented yet
 		return ST_TXT_SETUP;
 	}
 	
+	// Sampling time should be define after the duration and should be <= duration.
 	char Sampling_Time(char input)
 	{	
-		if (ON==FALSE)
+		if (ON==FALSE) // If data logger is OFF we can modify the sampling time.
 	{
-		char String[4];
-		static unsigned char First_in_Function = TRUE;
+		char String[4]; // String to display the sampling time on the LCD screen
+		static unsigned char First_in_Function = TRUE; // Flag for first entry in the function.
 		
-		if (First_in_Function){
+		if (First_in_Function) // If first entry, display the memorised sampling time value, at the start sampling time =  1
+		{
 			itoa(Sampling_Time_var, String, 10);
 			cli();lcd_gotoxy(0,1);lcd_puts("Periode:    s");lcd_gotoxy(8,1);lcd_puts(String);sei();
-			First_in_Function = FALSE;
+			First_in_Function = FALSE; // First entry finished
 		}
 		else{
-			if (input != ENTER){
-				switch(input){
-					case LEFT :
+			if (input != ENTER) // If no confirmation by pushing the ENTER button from the user.
+			{
+				switch(input)
+				{
+					case LEFT : // Decrement by 10
 					Sampling_Time_var =Sampling_Time_var-10;
-					if (Sampling_Time_var<=0){
+					if (Sampling_Time_var<=0) // If sampling time <=0 put 1 by default
+					{
 						Sampling_Time_var=1;
 					}
-					itoa(Sampling_Time_var, String, 10);
-					cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei();
+					itoa(Sampling_Time_var, String, 10); // Conversion from integer to ASCII.
+					cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei(); // Display on the LCD
 					break;
-					case DOWN :
+					case DOWN : // Decrement by 1
 					Sampling_Time_var =Sampling_Time_var-1;
-					if (Sampling_Time_var<=0){Sampling_Time_var=1;}
-					itoa(Sampling_Time_var, String, 10);
-					cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei();
+					if (Sampling_Time_var<=0){Sampling_Time_var=1;} // If sampling time <=0 put 1 by default
+					itoa(Sampling_Time_var, String, 10); // Conversion from integer to ASCII.
+					cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei(); // Display on the LCD
 					break;
-					case UP:
+					case UP: // Increment by 1
 					Sampling_Time_var =Sampling_Time_var+1;
-					if (Sampling_Time_var>=59){Sampling_Time_var=59;}
-					itoa(Sampling_Time_var, String, 10);
-					cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei();
+					if (Sampling_Time_var>=59){Sampling_Time_var=59;} // If sampling time >=59 put 59 by default
+					itoa(Sampling_Time_var, String, 10); // Conversion from integer to ASCII.
+					cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei(); // Display on the LCD
 					break;
-					case RIGHT:
+					case RIGHT: // Increment by 10
 					Sampling_Time_var =Sampling_Time_var+10;
-					if (Sampling_Time_var>=59){Sampling_Time_var=59;}
-					itoa(Sampling_Time_var, String, 10);
-					cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei();
+					if (Sampling_Time_var>=59){Sampling_Time_var=59;} // If sampling time >=59 put 59 by default
+					itoa(Sampling_Time_var, String, 10); // Conversion from integer to ASCII.
+					cli();lcd_gotoxy(8,1);lcd_puts("    ");lcd_gotoxy(8,1);lcd_puts(String);sei(); // Display on the LCD
 					break;
 				}
 				
 			}
-			else
+			else // If user wants to confirm his sampling time value
 			{
-				if(Sampling_Time_var<=total_time){
+				if(Sampling_Time_var<=total_time) // Sampling time in the range of duration, ok set back the flag andd go next menu.
+				{
 					First_in_Function = TRUE;
 					return ST_TXT_ON_OFF;
 				}
-				else{
+				else // User should modify the duration.
+				{
 					cli();lcd_clrscr();lcd_gotoxy(0,0);lcd_puts("DURATION");sei();
 					return ST_TXT_DURATION;
 				}
@@ -864,7 +878,7 @@ char Time(char input)
 		return ST_FCT_SAMPLING_TIME;
 		//return ST_FCT_SAMPLING_TIME;
 	} 
-	else
+	else // Data logger still ON, should turn off the data logger to modify sampling time.
 	{
 		return ST_TXT_ON_OFF;
 	}
@@ -874,104 +888,109 @@ char Time(char input)
 	
 	char Duration(char input)
 	{	
-		if(ON==FALSE){
+		if(ON==FALSE) // If data logger is off we can modify the duration of the measurment.
+		{
 				
-				int IndSec;
-				int IndMin;
-				int IndHour;
-				int IndDay;
-				char String_Second[3];
-				char String_Minute[3];
-				char String_Hour[3];
-				char String_Day[3];
-				static unsigned char First_in_Function = TRUE;
+				int IndSec;		// Index value on the LCD display for displaying seconds.
+				int IndMin;		// Index value on the LCD display for displaying minutes.
+				int IndHour;	// Index value on the LCD display for displaying hours.
+				int IndDay;		// Index value on the LCD display for displaying days.
+				char String_Second[3]; // String to display the integer converted value of seconds in ASCII.
+				char String_Minute[3]; // String to display the integer converted value of minutes in ASCII.
+				char String_Hour[3];   // String to display the integer converted value of hours in ASCII.
+				char String_Day[3];    // String to display the integer converted value of days in ASCII.
+				static unsigned char First_in_Function = TRUE; // Flag to notice the first entry in the Duration fonction.
 				
-				if (First_in_Function)
+				if (First_in_Function) // If first entry in the function, display the memorised duration value. If first time, duration = 0.
 				{
-					if (seconds<10)
+					if (seconds<10) // If seconds value is < 10 we need only one digit to display the value so we put a 0 before.
 					{
 						IndSec = 1;
 						cli();lcd_gotoxy(0,1);lcd_puts("0");sei();
-					}else
+					}else // If seconds value is > 10 we need two digits to display the value.
 					{
 						IndSec = 0;
 					}
-					if (minutes<10)
+					if (minutes<10) // If minutes value is < 10 we need only one digit to display the value so we put a 0 before.
 					{
 						IndMin = 4;
 						cli();lcd_gotoxy(0,3);lcd_puts("0");sei();
-					}else
+					}else // If minutes value is > 10 we need two digits to display the value.
 					{
 						IndMin = 3;
 					}
-					if (hours<10)
+					if (hours<10) // If hours value is < 10 we need only one digit to display the value so we put a 0 before.
 					{
 						IndHour = 7;
 						cli();lcd_gotoxy(0,6);lcd_puts("0");sei();
-					}else
+					}else // If hours value is > 10 we need two digits to display the value.
 					{
 						IndHour = 6;
 					}
-					if (days<10)
+					if (days<10) // If days value is < 10 we need only one digit to display the value so we put a 0 before.
 					{
 						IndDay = 10;
 						cli();lcd_gotoxy(0,9);lcd_puts("0");sei();
-					}else
+					}else // If days value is > 10 we need two digits to display the value.
 					{
 						IndDay = 9;
 					}
+					// Conversion of the integers values of seconds minutes hours and days into ASCII for display.
 					itoa(seconds, String_Second, 10);
 					itoa(minutes, String_Minute, 10);
 					itoa(hours, String_Hour, 10);
 					itoa(days, String_Day, 10);
+					// Display of all the values on the LCD screen.
 					cli();lcd_gotoxy(0,1);lcd_puts("  s  m  h  d");sei();
 					cli();lcd_gotoxy(IndSec,1);lcd_puts(String_Second);sei();
 					cli();lcd_gotoxy(IndMin,1);lcd_puts(String_Minute);sei();
 					cli();lcd_gotoxy(IndHour,1);lcd_puts(String_Hour);sei();
 					cli();lcd_gotoxy(IndDay,1);lcd_puts(String_Day);sei();
+					// First entry in the function finished.
 					First_in_Function = FALSE;
 				}
-				else
+				else // Other entry in the function than the first.
 				{
-					if (input != ENTER)
+					if (input != ENTER) // If no confirmation from the user by pushing the ENTER button.
 					{
 						switch(input)
 						{
-							case LEFT :
+							case LEFT : // Navigation from the left to the right to modify seconds minutes hours and days values.
 							
-							if (status_date<=0)
+							if (status_date<=0) // If we are at the second value place, we go to the days value place
 							{
 								status_date=3;
 							}
-							else{
+							else // If not, we go from the left to the right to modify other values.
+							{
 								status_date=status_date-1;
 							}
 							break;
-							case RIGHT:
+							case RIGHT: // Navigation from the right to the left to modify seconds minutes hours and days values.
 							status_date=status_date+1;
-							if (status_date>3)
+							if (status_date>3) // If we are at the days value place, we go to the seconds value place
 							{
 								status_date=0;
 							}
 							break;
-							case UP:
-							if (status_date==0)
+							case UP: // If we want to increment a value.
+							if (status_date==0) // If we want to modify the seconds value
 							{
-								if (seconds>=0 && seconds<=59)
+								if (seconds>=0 && seconds<=59) // Check the range of the seconds value
 								{
 									seconds+=1;
-									if (seconds<10)
+									if (seconds<10) // One digit is needed to display.
 									{
 										IndSec = 1;
 										cli();lcd_gotoxy(0,1);lcd_puts("0");sei();
-									}else
+									}else // Two digit are needed to display.
 									{
 										IndSec = 0;
 									}
-									itoa(seconds, String_Second, 10);
-									cli();lcd_gotoxy(IndSec,1);lcd_puts(String_Second);sei();
+									itoa(seconds, String_Second, 10); // Conversion from integer to ASCII.
+									cli();lcd_gotoxy(IndSec,1);lcd_puts(String_Second);sei(); // Display on the LCD
 								}
-								else
+								else // Seconds higher than 60 we put 0 and we display back.
 								{
 									
 									seconds=0;
@@ -979,23 +998,23 @@ char Time(char input)
 								}
 								
 							}
-							else if (status_date==1)
+							else if (status_date==1) // If we want to modify the minutes value
 							{
-								if (minutes>=0 && minutes<=59)
+								if (minutes>=0 && minutes<=59) // Check the range of the minutes value
 								{
 									minutes+=1;
-									if (minutes<10)
+									if (minutes<10) // One digit is needed to display.
 									{
 										IndMin = 4;
 										cli();lcd_gotoxy(3,1);lcd_puts("0");sei();
-									}else
+									}else // Two digit are needed to display.
 									{
 										IndMin = 3;
 									}
-									itoa(minutes, String_Minute, 10);
-									cli();lcd_gotoxy(IndMin,1);lcd_puts(String_Minute);sei();
+									itoa(minutes, String_Minute, 10); // Conversion from integer to ASCII.
+									cli();lcd_gotoxy(IndMin,1);lcd_puts(String_Minute);sei(); // Display on the LCD
 								}
-								else
+								else // Minutes higher than 60 we put 0 and we display back.
 								{
 									
 									minutes=0;
@@ -1003,23 +1022,23 @@ char Time(char input)
 								}
 								
 							}
-							else if (status_date==2)
+							else if (status_date==2) // If we want to modify the hours value
 							{
-								if (hours>=0 && hours<=23)
+								if (hours>=0 && hours<=23) // Check the range of the hours value
 								{
 									hours+=1;
-									if (hours<10)
+									if (hours<10) // One digit is needed to display.
 									{
 										IndHour = 7;
 										cli();lcd_gotoxy(6,1);lcd_puts("0");sei();
-									}else
+									}else // Two digit are needed to display.
 									{
 										IndHour = 6;
 									}
-									itoa(hours, String_Hour, 10);
-									cli();lcd_gotoxy(IndHour,1);lcd_puts(String_Hour);sei();
+									itoa(hours, String_Hour, 10); // Conversion from integer to ASCII.
+									cli();lcd_gotoxy(IndHour,1);lcd_puts(String_Hour);sei(); // Display on the LCD
 								}
-								else
+								else // Hours higher than 24 we put 0 and we display back.
 								{
 									
 									hours=0;
@@ -1027,23 +1046,23 @@ char Time(char input)
 								}
 								
 							}
-							else
+							else // If we want to modify the days value
 							{
-								if (days>=0 && days<=30)
+								if (days>=0 && days<=30) // Check the range of the days value
 								{
 									days+=1;
-									if (days<10)
+									if (days<10) // One digit is needed to display.
 									{
 										IndDay = 10;
 										cli();lcd_gotoxy(9,1);lcd_puts("0");sei();
-									}else
+									}else // Two digit are needed to display.
 									{
 										IndDay = 9;
 									}
-									itoa(days, String_Day, 10);
-									cli();lcd_gotoxy(IndDay,1);lcd_puts(String_Day);sei();
+									itoa(days, String_Day, 10); // Conversion from integer to ASCII.
+									cli();lcd_gotoxy(IndDay,1);lcd_puts(String_Day);sei(); // Display on the LCD
 								}
-								else
+								else // Days higher than 31 we put 0 and we display back.
 								{
 									
 									days=0;
@@ -1052,109 +1071,109 @@ char Time(char input)
 								
 							}
 							break;
-							case DOWN:
-							if (status_date==0)
+							case DOWN: // If we want to increment a value.
+							if (status_date==0) // If we want to modify the seconds value
 							{
-								if (seconds==0)
+								if (seconds==0) // If seconds value equal to 0 we put 60. Two digits needed.
 								{
 									seconds=60;
 									IndSec = 0;
-									itoa(seconds, String_Second, 10);
-									cli();lcd_gotoxy(IndSec,1);lcd_puts(String_Second);sei();
+									itoa(seconds, String_Second, 10); // Conversion from integer to ASCII.
+									cli();lcd_gotoxy(IndSec,1);lcd_puts(String_Second);sei(); // Display on the LCD
 								}
-								else
+								else // Second between 1 and 60
 								{
 									seconds-=1;
-									if (seconds<10)
+									if (seconds<10) // One digit is needed to display.
 									{
 										IndSec = 1;
 										cli();lcd_gotoxy(0,1);lcd_puts("0");sei();
-									}else
+									}else // Two digit are needed to display.
 									{
 										IndSec = 0;
 									}
-									itoa(seconds, String_Second, 10);
-									cli();lcd_gotoxy(IndSec,1);lcd_puts(String_Second);sei();
+									itoa(seconds, String_Second, 10); // Conversion from integer to ASCII.
+									cli();lcd_gotoxy(IndSec,1);lcd_puts(String_Second);sei(); // Display on the LCD
 								}
 								
 							}
-							else if (status_date==1)
+							else if (status_date==1) // If we want to modify the minutes value
 							{
-								if (minutes==0)
+								if (minutes==0) // If minutes value equal to 0 we put 60. Two digits needed.
 								{
 									minutes=60;
 									IndMin = 3;
-									itoa(minutes, String_Minute, 10);
-									cli();lcd_gotoxy(IndMin,1);lcd_puts(String_Minute);sei();
+									itoa(minutes, String_Minute, 10); // Conversion from integer to ASCII.
+									cli();lcd_gotoxy(IndMin,1);lcd_puts(String_Minute);sei(); // Display on the LCD
 								}
-								else
+								else // Minutes between 1 and 60
 								{
 									minutes-=1;
-									if (minutes<10)
+									if (minutes<10) // One digit is needed to display.
 									{
 										IndMin = 4;
 										cli();lcd_gotoxy(3,1);lcd_puts("0");sei();
-									}else
+									}else // Two digit are needed to display.
 									{
 										IndMin = 3;
 									}
-									itoa(minutes, String_Minute, 10);
-									cli();lcd_gotoxy(IndMin,1);lcd_puts(String_Minute);sei();
+									itoa(minutes, String_Minute, 10); // Conversion from integer to ASCII.
+									cli();lcd_gotoxy(IndMin,1);lcd_puts(String_Minute);sei(); // Display on the LCD
 								}
 							}
-							else if (status_date==2)
+							else if (status_date==2) // If we want to modify the hours value
 							{
-								if (hours==0)
+								if (hours==0) // If hours value equal to 0 we put 24. Two digits needed.
 								{
 									hours=24;
 									IndHour = 6;
-									itoa(hours, String_Hour, 10);
-									cli();lcd_gotoxy(IndHour,1);lcd_puts(String_Hour);sei();
+									itoa(hours, String_Hour, 10); // Conversion from integer to ASCII.
+									cli();lcd_gotoxy(IndHour,1);lcd_puts(String_Hour);sei(); // Display on the LCD
 								}
-								else
+								else // Hours between 1 and 24
 								{
 									hours-=1;
-									if (hours<10)
+									if (hours<10) // One digit is needed to display.
 									{
 										IndHour = 7;
 										cli();lcd_gotoxy(6,1);lcd_puts("0");sei();
-									}else
+									}else // Two digit are needed to display.
 									{
 										IndHour = 6;
 									}
-									itoa(hours, String_Hour, 10);
-									cli();lcd_gotoxy(IndHour,1);lcd_puts(String_Hour);sei();
+									itoa(hours, String_Hour, 10); // Conversion from integer to ASCII.
+									cli();lcd_gotoxy(IndHour,1);lcd_puts(String_Hour);sei(); // Display on the LCD
 								}
 							}
-							else
+							else // If we want to modify the days value
 							{
-								if (days==0)
+								if (days==0) // If days value equal to 0 we put 31. Two digits needed.
 								{
 									days=31;
 									IndDay = 9;
-									itoa(days, String_Day, 10);
-									cli();lcd_gotoxy(IndDay,1);lcd_puts(String_Day);sei();
+									itoa(days, String_Day, 10); // Conversion from integer to ASCII.
+									cli();lcd_gotoxy(IndDay,1);lcd_puts(String_Day);sei(); // Display on the LCD
 								}
-								else
+								else // Days between 1 and 31
 								{
 									days-=1;
-									if (days<10)
+									if (days<10) // One digit is needed to display.
 									{
 										IndDay = 10;
 										cli();lcd_gotoxy(9,1);lcd_puts("0");sei();
-									}else
+									}else // Two digit are needed to display.
 									{
 										IndDay = 9;
 									}
-									itoa(days, String_Day, 10);
-									cli();lcd_gotoxy(IndDay,1);lcd_puts(String_Day);sei();
+									itoa(days, String_Day, 10); // Conversion from integer to ASCII.
+									cli();lcd_gotoxy(IndDay,1);lcd_puts(String_Day);sei(); // Display on the LCD
 								}
 							}
 							break;
 						}
 						
 					}
-					else
+					else // User push the ENTER button, so compute the total time of duration and set back the first in function flag. We go to the next menu.
 					{
 						total_time=seconds+minutes*60+hours*3600+days*24*3600;
 						First_in_Function = TRUE;
@@ -1163,8 +1182,8 @@ char Time(char input)
 				}
 				return ST_FCT_DURATION;
 		}
-		else{
-			
+		else // If data logger is on we go back to the On/Off menu to turn off the data logger in order to modify the duration value.
+		{
 			return ST_TXT_ON_OFF;
 		}
 		
@@ -1179,7 +1198,8 @@ char Datalogger_On_Off(char input)
 	{
 		if (ON)
 		{
-			cli();lcd_gotoxy(9,1);lcd_puts("ON  ");sei();
+			cli();lcd_gotoxy(9,1);lcd_puts("ON  ");sei();	// the LCD display which can change the ON or OFF state of the datalogger. The status will not be applied until ENTER is pressed. 
+			
 		}
 		
 		else {
@@ -1202,17 +1222,17 @@ char Datalogger_On_Off(char input)
 	else {
 		if (ON)
 		{
-			First_Mesure=TRUE;
+			First_Mesure=TRUE;                                                          //We'll initialise two callbacks, one for the alarm and one for tchek the alarme
 			tableau();
 			mesure();
-			IDCB_DATALOG_ON = Callbacks_Record_Timer(mesure,(Sampling_Time_var*1000));
-			IDCB_Sleepmodeon = Callbacks_Record_Timer(SleepModeOn, 5);
-			RTC_Alarm_Set_Seconde(RTC_Clock_Read_Byte(SECONDE) + Sampling_Time_var);
-			nombredinterruption = 0;
+			IDCB_DATALOG_ON = Callbacks_Record_Timer(mesure,(Sampling_Time_var*1000)); // each callback will be called every samplingtime (*100 for ms -->s conversion) 
+			IDCB_Sleepmodeon = Callbacks_Record_Timer(SleepModeOn, 5);                     // check if the INT0 interrupt has been entered
+			RTC_Alarm_Set_Seconde(RTC_Clock_Read_Byte(SECONDE) + Sampling_Time_var);    //Initialisation of the alarm that will sound 1 samplingtime later
+			nombredinterruption = 0;     // resets the number of times the interrupt has been entered so that several measurements can be taken in succession.
 		}
-		else if (ON == FALSE)
+		else if (ON == FALSE)  // We're going to remove the callbacks for taking measurements and initialising the alarm.
 		{
-			Callbacks_Remove_Timer(IDCB_DATALOG_ON);
+			Callbacks_Remove_Timer(IDCB_DATALOG_ON);  
 			Callbacks_Remove_Timer(SleepModeOn);
 		}
 		return ST_TXT_DATA_TRANSFER;
@@ -1220,15 +1240,15 @@ char Datalogger_On_Off(char input)
 }
 
 	void tableau(void) {
-		findelamesure = total_time/Sampling_Time_var;
+		findelamesure = total_time/Sampling_Time_var;  //We're going to find out how many sampling times there are in the duration. We're going to round the result to an integer so that it makes sense. 
 	}
 void SleepModeOn(void){
 	if(TIMEOUT){
 		TIMEOUT = FALSE;
-		RTC_Alarm_Set_Seconde((RTC_Clock_Read_Byte(SECONDE) + Sampling_Time_var) % 60);
+		RTC_Alarm_Set_Seconde((RTC_Clock_Read_Byte(SECONDE) + Sampling_Time_var) % 60);  //set the new alarm to sound 1 sampling time later
 		//Usart0_Tx_String("SLEEP MODE ON");
 		Usart0_Tx(0X0D);
-		//IDCB_Sleepmodeoff = Callbacks_Record_Timer(Sleppmodeoff, 4000);
+		//IDCB_Sleepmodeoff = Callbacks_Record_Timer(Sleppmodeoff, Sampling_time_var-5); //callback to activate the modesleep that was unable to function
 		//SMCR |= (1 << SE);
 	}
 }
@@ -1236,13 +1256,9 @@ void SleepModeOn(void){
 		SMCR &= ~(1 << SE);
 		//Usart0_Tx_String("Sleep mode Off");
 		Usart0_Tx(0X0D);
-		Callbacks_Remove_Timer(IDCB_Sleepmodeoff);
-		RTC_Clock_Read_All();
-		convertBCDtoChar(SECONDE,TWI_buf[1]);
-		convertBCDtoChar(HEURE,TWI_buf[3]);
-		convertBCDtoChar(DATE,TWI_buf[5]);
-	}
+		Callbacks_Remove_Timer(IDCB_Sleepmodeoff);  // It removes itself
 
+	}
 
 		void mesure (void)
 	{
@@ -1250,13 +1266,15 @@ void SleepModeOn(void){
 		char buffer[10];
 		int format_int[8];
 		char format_char[16];
-		
 		// set the start addresses for each memory if it's the first time mesure is called
 		if (First_Mesure==TRUE)
 		{
+			// set the start address of each memory
 			sramAddressMemory=0x0007;
 			eepromAddressMemory=0x01;
+			// disable the first mesure and lock all external change in the sensor and memory choice
 			First_Mesure=FALSE;
+			// initialize the number of acquisition for the sram part
 			sramcallmesure=0;
 		} 
 		/*
@@ -1265,17 +1283,15 @@ void SleepModeOn(void){
 		// check which sensor is currently used
 		switch(sensor_selection)
 		{
-			
 			case SENSOR_CURRENT:
-
-			
 			// distribute the save if eeprom is selected or not by default it is
 			if (memory_selection==MEMORY_EEPROM)
 			{	
-				//Usart0_Tx_String("EEPROM");
-				//ENREGISTREMENT SUR EEPROM
+				// EEPROM can write up to 128 byte 
+				// Save acquisition on EEPROM
 				// update the I²C buffer to save time parameter of the mesure
 				RTC_Clock_Read_All();
+				// save each required data into the table
 				format_int[0]=(char)convertBCDtoChar(DATE,TWI_buf[5]);
 				format_int[1]=(char)convertBCDtoChar(MOIS,TWI_buf[6]);
 				format_int[2]=(char)convertBCDtoChar(ANNEE,TWI_buf[7]);
@@ -1284,9 +1300,13 @@ void SleepModeOn(void){
 				format_int[5]=(char)convertBCDtoChar(SECONDE,TWI_buf[1]);
 				// Update the global variable of current data and identify the sensor used for the sample
 				currentSensorRead();
+				// identify which sensor is used (not required but it's considered in the transfer part)
 				format_int[6]="current";
+				// save the current value
 				format_int[7]=currentData;
+				// call the EEPROM to save the table
 				EEPROM_Write_int(eepromAddressMemory,8,format_int);
+				// increase the address of the eeprom bu 16 as we split each integer as 2 char
 				eepromAddressMemory = eepromAddressMemory+16;
 				
 				/*
@@ -1296,24 +1316,31 @@ void SleepModeOn(void){
 				*/
 			}
 			else{
-				//Usart0_Tx_String("SRAM");
-				//ENREGISTREMENT SUR SRAM
-				char ascii_SRAM_mesure =itoa(sramcallmesure,buffer,10);
+				// Save acquisition on SRAM
+				// Sram write only byte per byte
+				// split the required integer for the number of mesure into 2 char
 				format_char[0]=((sramcallmesure>> 8) & 0xFF);    // MSB
 				format_char[1]=(sramcallmesure & 0xFF); // LSB
 				// Update the global variable of current data and identify the sensor used for the sample
 				currentSensorRead();
+				// save the current value by split 
 				format_char[2]=((currentData>> 8) & 0xFF);    // MSB
 				format_char[3]=(currentData & 0xFF); // LSB
+				// send the table into the sram function to save it
 				for(int i = 0 ; i <4;i++){
 					SRAM_Write(sramAddressMemory+i,format_char[i]);
 				}
-				//WRITEonSRAM(sramAddressMemory,format_char);
+				// increase the sram address to be an empty one 
 				sramAddressMemory=sramAddressMemory+4;
+				// increase the number of mesure done
 				sramcallmesure++;
+				
+				// Debug for the number of acquisition already done
 				/*
 				Usart0_Tx_String(itoa(sramcallmesure,buffer,10));
 				*/
+				
+				// Debug of the memory selection and the sensor selection
 				/*
 				Usart0_Tx_String("CURRENT_SRAM");
 				Usart0_Tx(0x0D);
@@ -1322,16 +1349,16 @@ void SleepModeOn(void){
 					
 			}
 			break;
-			// same logic 
+			// same logic  can be use but the sensor is not implemented
 			case SENSOR_ADC:
 			if (memory_selection==MEMORY_EEPROM){
-				//ENREGISTREMENT SUR EEPROM
+				// Save acquisition on EEPROM
 				Usart0_Tx_String("ADC_EEPROM");
 				Usart0_Tx(0x0D);
 				Usart0_Tx(0X0A);
 			}
 			else{
-				//ENREGISTREMENT SUR SRAM
+				// Save acquisition on SRAM
 				Usart0_Tx_String("ADC_SRAM");
 				Usart0_Tx(0x0D);
 				Usart0_Tx(0X0A);
@@ -1352,91 +1379,105 @@ void SleepModeOn(void){
 		// check which sensor is currently used
 		switch(sensor_selection)
 		{
-			
 			case SENSOR_CURRENT:
 			// check if eeprom is selected or not by default
 			if (memory_selection==MEMORY_EEPROM)
 			{
-				
 				//READ ON EEPROM
 				Usart0_Tx(0x0D);
-				for (int i =1; i <=  (eepromAddressMemory-1);)
+				// check the last eeprom address which was used and increment
+				// i until it has reached that point
+				for (int i =1; i <=  (eepromAddressMemory-1);) 
 				{	
 					// String treatment exception  as it is already in ascii
 					if ( i==13+j*16)
 					{
-						j++;
+						j++; // number of mesure done help to check the position of the ascii in EEPROM
 						int value=((int)Eeprom_Read_0(0x00+i) << 8) | (int)Eeprom_Read_0(0x00+(i+1));
 						Usart0_Tx_String(value);
 						Usart0_Tx(0x3B);
-						
-						//Usart0_Tx_String("sensor");
+						// Debug for the position test in the transmission
+						/*
+						Usart0_Tx_String("sensor");
+						*/
 					} 
-					//else if(i==)
+					// check if it's the date part 
 					else if((i>=1+j*16)&&(i<6+j*16))
 					{
 						int value=((int)Eeprom_Read_0(0x00+i) << 8) | (int)Eeprom_Read_0(0x00+(i+1));
 						Usart0_Tx_String(itoa(value,buffer,10));
 						
-						if(i==5+16*j){
-							// insert ";" at the end of 
+						if(i==5+16*j){ // it's the end date part
+							// send  ";" in the terminal at the end of the section 
 							Usart0_Tx(0x3B);
 						}
 						else{
+							// send '/' in the terminal
 							Usart0_Tx(0x2F);
 						}
 						
 					}
+					// check if it's the hour part 
 					else if((i>=7+j*16)&&(i<12+j*16))
 					{
 						int value=((int)Eeprom_Read_0(0x00+i) << 8) | (int)Eeprom_Read_0(0x00+(i+1));
 						Usart0_Tx_String(itoa(value,buffer,10));
 						
-						if(i==11+16*j){
-							// insert ";" at the end of
+						if(i==11+16*j){ // it's the end of the hour part
+							// send ";" at the end of the section
 							Usart0_Tx(0x3B);
 						}
 						else{
+							// sent ':' in the terminal
 							Usart0_Tx(0x3A);
 						}
 						
 					}
+					// read the sensor value in the memory
 					else
 					{
+						// rebuild the value as an integer
 						int value=((int)Eeprom_Read_0(0x00+i) << 8) | (int)Eeprom_Read_0(0x00+(i+1));
+						// convert the integer into an ascii 
 						Usart0_Tx_String(itoa(value,buffer,10));
+						// send ";" as it's the end of the section
 						Usart0_Tx(0x3B);
+						// send the carriage return
 						Usart0_Tx(0x0D);
-					}
-					// output in the terminal ";"
-					
-					/*
-					Usart0_Tx_String(itoa(i,buffer,10));
-					Usart0_Tx(0x3B);
-					Usart0_Tx_String(itoa(j,buffer,10));
-					Usart0_Tx(0x3B);
-					*/
-					
-					//	increase the I by 2 as we check memory addresses two by two				
+					}		
+					//	Increase the I by 2 as we check memory addresses two by two				
 					i=i+2;	
 				}
 		
 			}
 			else{
-				//READ ON SRAM
-				Usart0_Tx(0x0D);
+				// READ ON SRAM
+				// Carriage return
+				Usart0_Tx(0x0D); 
+				// check the last sram address which was used and increment
+				// i until it has reached that point
+				// the minus 8 is there as we read 4 integer split into 8 char 
+				// avoid one more loop
 				for (int i =0; i <=  (sramAddressMemory-8);)
 				{	
+					// start at 0x0007 and increment it 
+					// rebuild the value as an integer
 					int value=((int)SRAM_Read(0x0007+i) << 8) | (int)SRAM_Read(0x0007+(i+1));
+					// transform the integer into ascii and send it in USART
 					Usart0_Tx_String(itoa(value,buffer,10));
+					// send ';'
 					Usart0_Tx(0x3B);
+					//	Increase the I by 2 as we check memory addresses two by two	
 					i=i+2;
+					// if we use 4 char to rebuild all the format used we know that the fourth one is the last
+					// one for that specific mesure
 					if (i%4==0)
 					{
 						Usart0_Tx(0x0D);
 					}
 						
 				}
+				// Debug of the memory selection and the sensor selection
 				/*
 				Usart0_Tx_String("CURRENT_SRAM");
 				Usart0_Tx(0x0D);
@@ -1444,9 +1485,10 @@ void SleepModeOn(void){
 				*/
 			}
 			break;
+			// same logic  can be use but the sensor is not implemented
 			case SENSOR_ADC:
 			if (memory_selection==MEMORY_EEPROM){
-				//READ ON EEPROM
+				// READ ON EEPROM
 				Usart0_Tx_String("ADC_EEPROM");
 				Usart0_Tx(0x0D);
 				Usart0_Tx(0X0A);
@@ -1462,10 +1504,6 @@ void SleepModeOn(void){
 			default:
 			break;
 		}
-		/*Usart0_Tx_String("sensor value");
-		int value=((int)Eeprom_Read(0x00+14) << 8) | (int)Eeprom_Read(0x00+15);
-		Usart0_Tx_String(itoa(value,buffer,10));
-		*/
 		return ST_TXT_DATALOGGER;
 	}
 	
