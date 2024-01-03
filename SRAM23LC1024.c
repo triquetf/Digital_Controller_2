@@ -7,14 +7,19 @@
 
 #include "lcd.h"
 
-// ***Variables Globales***//
+// ***Variables Globales*******************************************************************************************************************************************************************************************//
 
 unsigned char junk = 0;
 
-//***Fonctions***//
+//***Fonctions*****************************************************************************************************************************************************************************************************//
 
 
 
+
+//Function name :    SRAM_Init
+//Parameters : nothing
+//REturn : nothing 
+//How it works : we write in the SRAM the mode we want to use, here it will be byter mode
 void SRAM_Init(void){
 	
 	SRAM_OFF;
@@ -33,9 +38,12 @@ void SRAM_Init(void){
 
 
 
-
-//Address is the starting address of the sram where we are going to encode data
-//Data is all the data we want to write on the sram
+//Function name :    WRITEonSRAM 
+//Parameters :    - unsigned long (32 bits) address of writing
+//                - tabel of unsigned char, the bytes we want to write
+//REturn : nothing in return
+//How it works : Address is the starting address of the sram where we are going to encode data
+//				 Data is all the data we want to write on the sram
 void WRITEonSRAM(unsigned long address, unsigned char data[]){
 	unsigned int taille = sizeof(data);
 	for(int i = 0;i<taille;i++){
@@ -45,9 +53,13 @@ void WRITEonSRAM(unsigned long address, unsigned char data[]){
 }
 
 
-//Address is the starting address of the data we want 
-//taille is the number of bytes we want to receive beginning at this address
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Function name :    READonSRAM
+//Parameters :    - unsigned long (32 bits) address of reading
+//                - unsigned char, the number of bytes we want to read
+//REturn : table of char of lenght 'taille' read on t
+//How it works : Address is the starting address of the data we want
+//				 taille is the number of bytes we want to receive beginning at this address
 unsigned char READonSRAM(unsigned long address, unsigned char taille){
 	unsigned char data[taille];
 	for(int i = 0;i<taille;i++){
@@ -58,6 +70,13 @@ unsigned char READonSRAM(unsigned long address, unsigned char taille){
 
 
 
+//Function name :    SRAM_Write
+//Parameters :    - unsigned long (32 bits) address of writing
+//                - unsigned char, the byte we want to write
+//REturn : nothing in return
+//How it works : we first set the chipselect pin to 0 to activate spi communication with the SRAM
+//				 then we make 4 spi communication with the sram, sending the write instruction and then the 3 last bytes of the address in the good order. We clear spif flag everytime
+//				 finally we transmit the data we ant to read, clear spif flag one last time and close the communication by setting chipselect to 1 again
 void SRAM_Write(unsigned long address, unsigned char data){
 	SRAM_OFF;
 	SPI_MasterTransmit(WRITE);
@@ -75,7 +94,12 @@ void SRAM_Write(unsigned long address, unsigned char data){
 }
 
 
-//
+//Function name :    SRAM_Read
+//Parameters :    - unsigned long (32 bits) address of read
+//REturn :   unsigned char, the data byte at the given address 
+//How it works : we first set the chipselect pin to 0 to activate spi communication with the SRAM
+//				 then we make 4 spi communication with the sram, sending the read instruction and then the 3 last bytes of the address in the good order. We clear spif flag everytime
+//				 finally we transmit a junk byte to fill spdr register to push and get the data byte in return savec in out variable, clear spif flag one last time and close the communication by setting chipselect to 1 again
 unsigned char SRAM_Read(unsigned long address) {
 	SRAM_OFF;
 	SPI_MasterTransmit(READ); // Envoie d'abord l'instruction
@@ -92,12 +116,3 @@ unsigned char SRAM_Read(unsigned long address) {
 	return out;
 }
 
-
-void DelayPointer(long int rep){
-	//Theses line of code are just here to create a little delay for the pointer.
-	int a;
-	for (int i=0;i<rep;i++){
-		a++;
-		a--;
-	}
-}
